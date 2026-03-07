@@ -1,0 +1,20 @@
+{
+  "name": "ATLAS — Investment Intelligence",
+  "short_name": "ATLAS",
+  "description": "Personal investment decision intelligence system",
+  "start_url": "/index.html",
+  "display": "standalone",
+  "background_color": "#06090f",
+  "theme_color": "#06090f",
+  "orientation": "portrait-primary",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ],
+  "categories": ["finance", "utilities"],
+  "shortcuts": [
+    { "name": "Scanner", "url": "/index.html#scanner", "description": "Run opportunity scanner" },
+    { "name": "Portfolio", "url": "/index.html#portfolio", "description": "View portfolio" },
+    { "name": "Regime", "url": "/index.html#regime", "description": "Check market regime" }
+  ]
+}
