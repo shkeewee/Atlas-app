@@ -1,4 +1,4 @@
-name: COMBO-1 Backtest
+name: COMBO-1 + DISP-1 Research
 
 on:
   push:
@@ -6,15 +6,10 @@ on:
     paths:
       - 'research/crypto/**'
       - '.github/workflows/combo1-backtest.yml'
-  pull_request:
-    branches: [ main ]
-    paths:
-      - 'research/crypto/**'
-      - '.github/workflows/combo1-backtest.yml'
   workflow_dispatch:
 
 jobs:
-  backtest:
+  research:
     runs-on: ubuntu-latest
     timeout-minutes: 60
     steps:
@@ -41,7 +36,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: combo1-results
+          name: combo1-results-${{ github.run_id }}
           path: combo1_results/
           if-no-files-found: warn
           retention-days: 14
@@ -49,7 +44,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: disp1-results
+          name: disp1-results-${{ github.run_id }}
           path: disp1_results/
           if-no-files-found: warn
           retention-days: 14
