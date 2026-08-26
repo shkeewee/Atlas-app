@@ -16,7 +16,7 @@ on:
 jobs:
   backtest:
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -31,11 +31,25 @@ jobs:
           COMBO_OUT: combo1_results
           COMBO_CACHE: .combo1_cache
         run: python research/crypto/combo1_backtest_v2.py
-      - name: Upload results
+      - name: Run DISP-1 event study
+        env:
+          COMBO_DAILY: combo1_results/daily_results.csv
+          DISP_OUT: disp1_results
+          DISP_CACHE: .disp1_cache
+        run: python research/crypto/disp1_event_study.py
+      - name: Upload COMBO-1 results
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: combo1-results
           path: combo1_results/
+          if-no-files-found: warn
+          retention-days: 14
+      - name: Upload DISP-1 results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: disp1-results
+          path: disp1_results/
           if-no-files-found: warn
           retention-days: 14
