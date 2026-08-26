@@ -1,4 +1,4 @@
-name: COMBO-1 + DISP-1 Research
+name: COMBO-1 + DISP Research
 
 on:
   push:
@@ -32,6 +32,11 @@ jobs:
           DISP_OUT: disp1_results
           DISP_CACHE: .disp1_cache
         run: python research/crypto/disp1_event_study.py
+      - name: Run DISP-2 extensions
+        env:
+          DISP1_DAILY: disp1_results/event_days.csv
+          DISP2_OUT: disp2_results
+        run: python research/crypto/disp2_extensions.py
       - name: Upload COMBO-1 results
         if: always()
         uses: actions/upload-artifact@v4
@@ -46,5 +51,13 @@ jobs:
         with:
           name: disp1-results-${{ github.run_id }}
           path: disp1_results/
+          if-no-files-found: warn
+          retention-days: 14
+      - name: Upload DISP-2 results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: disp2-results-${{ github.run_id }}
+          path: disp2_results/
           if-no-files-found: warn
           retention-days: 14
