@@ -11,7 +11,7 @@ on:
 jobs:
   research:
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 75
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -37,6 +37,12 @@ jobs:
           DISP1_DAILY: disp1_results/event_days.csv
           DISP2_OUT: disp2_results
         run: python research/crypto/disp2_extensions.py
+      - name: Run DISP-3 reversal variants
+        env:
+          COMBO_DAILY: combo1_results/daily_results.csv
+          DISP3_OUT: disp3_results
+          DISP_CACHE: .disp1_cache
+        run: python research/crypto/disp3_reversal_variants.py
       - name: Upload COMBO-1 results
         if: always()
         uses: actions/upload-artifact@v4
@@ -59,5 +65,13 @@ jobs:
         with:
           name: disp2-results-${{ github.run_id }}
           path: disp2_results/
+          if-no-files-found: warn
+          retention-days: 14
+      - name: Upload DISP-3 results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: disp3-results-${{ github.run_id }}
+          path: disp3_results/
           if-no-files-found: warn
           retention-days: 14
