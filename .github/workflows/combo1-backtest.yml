@@ -1,0 +1,36 @@
+name: COMBO-1 Backtest
+
+on:
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'research/crypto/**'
+      - '.github/workflows/combo1-backtest.yml'
+  workflow_dispatch:
+
+jobs:
+  backtest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install numpy pandas scipy scikit-learn requests
+      - name: Run COMBO-1 walk-forward backtest
+        env:
+          COMBO_OUT: combo1_results
+          COMBO_CACHE: .combo1_cache
+        run: python research/crypto/combo1_backtest.py
+      - name: Upload results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: combo1-results
+          path: combo1_results/
+          if-no-files-found: warn
+          retention-days: 14
