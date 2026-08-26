@@ -1,6 +1,11 @@
 name: COMBO-1 Backtest
 
 on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'research/crypto/**'
+      - '.github/workflows/combo1-backtest.yml'
   pull_request:
     branches: [ main ]
     paths:
