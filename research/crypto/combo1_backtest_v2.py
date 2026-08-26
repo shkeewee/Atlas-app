@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 """Robust archive-ingestion wrapper for combo1_backtest.py.
 
-Adds: automatic CSV header detection, timestamp-unit inference, and daily Binance
-Vision fallback for the current partial month. Model logic remains unchanged.
+Adds: automatic CSV header detection, timestamp-unit inference, daily Binance
+Vision fallback for the current partial month, plus a live Binance REST fallback
+for the one missing forward daily open needed to score the final test date.
+Model logic remains unchanged.
 """
 from __future__ import annotations
 import io, zipfile
@@ -49,6 +51,29 @@ c.cached_zip_csv=cached_zip_csv_auto
 _orig_load_monthly=c.load_monthly
 
 
+def _rest_daily_klines(symbol: str):
+    """Fetch only the final forward-open window from Binance public REST.
+
+    This is not a new feature source: it only supplies the Aug-26 daily open
+    required to score the Aug-25 forward return when Binance Vision has not yet
+    published the daily ZIP for the current UTC day.
+    """
+    try:
+        start=int((c.TEST_END + pd.Timedelta(days=1)).timestamp()*1000)
+        r=c.SESSION.get(
+            "https://fapi.binance.com/fapi/v1/klines",
+            params={"symbol":symbol,"interval":"1d","startTime":start,"limit":2},
+            timeout=30,
+        )
+        r.raise_for_status()
+        rows=r.json()
+        if not rows:
+            return None
+        return pd.DataFrame(rows)
+    except Exception:
+        return None
+
+
 def load_monthly_plus_daily(symbol: str, kind: str, interval: str|None=None):
     parts=[]
     try:
@@ -56,7 +81,7 @@ def load_monthly_plus_daily(symbol: str, kind: str, interval: str|None=None):
     except Exception:
         pass
     # Monthly files are only published after month-end; add the last 45 days from
-    # daily archives so Aug-2026 and the Aug-26 forward-open are present.
+    # daily archives so Aug-2026 is present where Vision has already published it.
     start=max(c.DOWNLOAD_START.floor('D'), c.DOWNLOAD_END.floor('D')-pd.Timedelta(days=45))
     for d in pd.date_range(start,c.DOWNLOAD_END.floor('D'),freq='D',tz='UTC'):
         ds=d.strftime('%Y-%m-%d')
@@ -68,6 +93,11 @@ def load_monthly_plus_daily(symbol: str, kind: str, interval: str|None=None):
             fn=f"{symbol}-fundingRate-{ds}.zip"; url=f"{c.BASE}/daily/fundingRate/{symbol}/{fn}"
         else: raise ValueError(kind)
         x=cached_zip_csv_auto(url,f"daily/{kind}/{symbol}/{fn}")
+        if x is not None and len(x): parts.append(x)
+    # Current UTC day's Vision file can lag publication. Pull the final daily open
+    # from the public Binance REST API so the final historical test date is scoreable.
+    if kind=='klines' and interval=='1d':
+        x=_rest_daily_klines(symbol)
         if x is not None and len(x): parts.append(x)
     if not parts: raise RuntimeError(f"No {kind} data for {symbol}")
     return pd.concat(parts,ignore_index=True,sort=False)
